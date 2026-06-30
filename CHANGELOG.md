@@ -41,6 +41,8 @@ Install once, then use `/gstack-office-hours`, `/gstack-review`, `/gstack-qa`, a
 - Runtime files live outside `~/.cursor/skills/`, preventing Cursor's recursive scanner from surfacing duplicate skills.
 - Setup preserves local browser-pairing credentials, refreshes Windows skill copies, and leaves project-owned Cursor skills untouched during uninstall.
 - The Cloud Agent bootstrap installs Bun when the VM does not already provide it.
+- Cursor skills now resolve browser, design, PDF, diagram, QA, review, redaction, extension, jargon, and iOS support files from `$GSTACK_ROOT`, including global-only installs outside the gstack checkout.
+- Cursor upgrades detect the Cursor runtime and rerun setup with `--host cursor`; runtime mirrors avoid nested `review/SKILL.md` and `qa/SKILL.md` duplicates.
 
 #### For contributors
 - Added dedicated host config, generation, setup, and uninstall regression coverage, plus an isolated end-to-end install smoke.

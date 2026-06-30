@@ -369,6 +369,19 @@ describe('host-config-export.ts CLI', () => {
     expect(lines).toContain('plan-devex-review/dx-hall-of-fame.md');
   });
 
+  test('cursor symlinks returns runtime assets used by Cursor skills', () => {
+    const { stdout, exitCode } = run('symlinks', 'cursor');
+    expect(exitCode).toBe(0);
+    const lines = stdout.split('\n');
+    expect(lines).toContain('design/dist');
+    expect(lines).toContain('make-pdf/dist');
+    expect(lines).toContain('lib/diagram-render/dist');
+    expect(lines).toContain('scripts/jargon-list.json');
+    expect(lines).toContain('lib/redact-audit-log.ts');
+    expect(lines).toContain('review/checklist.md');
+    expect(lines).toContain('qa/templates');
+  });
+
   test('symlinks with missing host exits 1', () => {
     const { exitCode } = run('symlinks');
     expect(exitCode).toBe(1);
@@ -529,6 +542,18 @@ describe('host config correctness', () => {
 
   test('openclaw has no staticFiles (SOUL.md removed)', () => {
     expect(openclaw.staticFiles).toBeUndefined();
+  });
+
+  test('cursor declares every runtime support asset used by its generated skills', () => {
+    const assets = cursor.runtimeRoot.globalSymlinks;
+    expect(assets).toContain('design/dist');
+    expect(assets).toContain('make-pdf/dist');
+    expect(assets).toContain('lib/diagram-render/dist');
+    expect(assets).toContain('scripts/jargon-list.json');
+    expect(assets).toContain('lib/redact-audit-log.ts');
+    expect(assets).toContain('lib/redact-patterns.ts');
+    expect(assets).toContain('ios-qa/templates');
+    expect(assets).toContain('extension');
   });
 
   test('openclaw includeSkills is empty (native skills replaced generated ones)', () => {

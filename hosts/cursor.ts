@@ -30,10 +30,16 @@ const cursor: HostConfig = {
   },
 
   pathRewrites: [
+    { from: '${HOME}/.claude/skills/gstack', to: '$GSTACK_ROOT' },
+    { from: '$HOME/.claude/skills/gstack', to: '$GSTACK_ROOT' },
     { from: '~/.claude/skills/gstack', to: '$GSTACK_ROOT' },
-    { from: '.claude/skills/gstack', to: '.cursor/gstack' },
-    { from: '.claude/skills/review', to: '.cursor/gstack/review' },
+    { from: '.claude/skills/gstack', to: '$GSTACK_ROOT' },
+    { from: '.claude/skills/review', to: '$GSTACK_ROOT/review' },
     { from: '.claude/skills', to: '.cursor/skills' },
+    { from: '.cursor/gstack/', to: '$GSTACK_ROOT/' },
+    { from: 'qa/templates/', to: '$GSTACK_ROOT/qa/templates/' },
+    { from: 'qa/references/', to: '$GSTACK_ROOT/qa/references/' },
+    { from: '`review/TODOS-format.md`', to: '`$GSTACK_ROOT/review/TODOS-format.md`' },
     { from: 'CLAUDE.md', to: 'AGENTS.md' },
   ],
   toolRewrites: {
@@ -51,7 +57,15 @@ const cursor: HostConfig = {
   suppressedResolvers: ['GBRAIN_CONTEXT_LOAD', 'GBRAIN_SAVE_RESULTS'],
 
   runtimeRoot: {
-    globalSymlinks: ['bin', 'browse/dist', 'browse/bin', 'design/dist', 'ETHOS.md', 'review/specialists', 'qa/templates', 'qa/references', 'plan-devex-review/dx-hall-of-fame.md'],
+    globalSymlinks: [
+      'bin', 'browse/dist', 'browse/bin', 'design/dist',
+      'make-pdf/dist', 'lib/diagram-render/dist',
+      'design-html/vendor', 'extension',
+      'ios-qa/templates', 'ios-qa/scripts',
+      'ETHOS.md', 'review/specialists', 'qa/templates', 'qa/references',
+      'plan-devex-review/dx-hall-of-fame.md',
+      'scripts/jargon-list.json', 'lib/redact-audit-log.ts', 'lib/redact-patterns.ts',
+    ],
     globalFiles: {
       'review': ['checklist.md', 'design-checklist.md', 'greptile-triage.md', 'TODOS-format.md'],
     },

@@ -2270,11 +2270,56 @@ describe('Cursor host generation', () => {
     expect(ship).not.toContain('Co-Authored-By: Claude');
   });
 
+  test('rewrites Cursor runtime paths in prose and shell blocks', () => {
+    const skills = fs.readdirSync(cursorSkills);
+    const forbidden = [
+      '$HOME/.claude/skills',
+      '${HOME}/.claude/skills',
+      '~/.claude/skills',
+      '.claude/skills',
+    ];
+    for (const skill of skills) {
+      const skillMd = path.join(cursorSkills, skill, 'SKILL.md');
+      if (!fs.existsSync(skillMd)) continue;
+      const content = fs.readFileSync(skillMd, 'utf-8');
+      for (const needle of forbidden) {
+        expect(content).not.toContain(needle);
+      }
+      for (const line of content.split('\n')) {
+        if (line.includes('qa/templates/') && !line.includes('ios-qa/templates/')) {
+          expect(line).toContain('$GSTACK_ROOT/qa/templates/');
+        }
+        if (line.includes('qa/references/')) {
+          expect(line).toContain('$GSTACK_ROOT/qa/references/');
+        }
+      }
+    }
+    for (const skill of skills) {
+      const skillMd = path.join(cursorSkills, skill, 'SKILL.md');
+      if (!fs.existsSync(skillMd)) continue;
+      const lines = fs.readFileSync(skillMd, 'utf-8').split('\n');
+      for (const line of lines.filter(line => line.includes('review/TODOS-format.md'))) {
+        expect(line).toContain('$GSTACK_ROOT/review/TODOS-format.md');
+      }
+    }
+  });
+
+  test('uses environment paths for global Cursor browser, design, and PDF binaries', () => {
+    const browse = fs.readFileSync(path.join(cursorSkills, 'gstack-browse', 'SKILL.md'), 'utf-8');
+    const design = fs.readFileSync(path.join(cursorSkills, 'gstack-design-shotgun', 'SKILL.md'), 'utf-8');
+    const pdf = fs.readFileSync(path.join(cursorSkills, 'gstack-make-pdf', 'SKILL.md'), 'utf-8');
+    expect(browse).toContain('B="$GSTACK_BROWSE/browse"');
+    expect(design).toContain('D="$GSTACK_DESIGN/design"');
+    expect(pdf).toContain('P="$GSTACK_MAKE_PDF/pdf"');
+  });
+
   test('generates a Cursor-native upgrade workflow for the runtime mirror', () => {
     const upgrade = fs.readFileSync(path.join(cursorSkills, 'gstack-upgrade', 'SKILL.md'), 'utf-8');
     expect(upgrade).toContain('.cursor/gstack');
     expect(upgrade).not.toContain('.claude/skills');
     expect(upgrade).not.toContain('CLAUDE.md');
+    expect(upgrade).toContain('CURSOR_HOST=true');
+    expect(upgrade).toContain('./setup --host cursor');
   });
 });
 
@@ -2488,6 +2533,11 @@ describe('setup script validation', () => {
     expect(setupContent).toContain('link_cursor_skill_dirs "$SOURCE_GSTACK_DIR" "$CURSOR_SKILLS"');
   });
 
+  test('setup rebuilds all runtime binaries when design or PDF is missing', () => {
+    expect(setupContent).toContain('[ ! -x "$SOURCE_GSTACK_DIR/design/dist/design" ]');
+    expect(setupContent).toContain('[ ! -x "$SOURCE_GSTACK_DIR/make-pdf/dist/pdf" ]');
+  });
+
   test('Cursor runtime assets come from the declarative host manifest', () => {
     const fnStart = setupContent.indexOf('create_cursor_runtime_root()');
     const fnEnd = setupContent.indexOf('link_factory_skill_dirs()', fnStart);
@@ -2504,6 +2554,7 @@ describe('setup script validation', () => {
     expect(fnBody).toContain('local cursor_skills="$gstack_dir/.cursor/skills"');
     expect(fnBody).toContain('runtime_name="${generated_name#gstack-}"');
     expect(fnBody).toContain('runtime_skill_dir="$cursor_gstack/gstack-upgrade"');
+    expect(fnBody).toContain('gstack-review|gstack-qa|gstack-qa-only');
     expect(fnBody).toContain('_link_or_copy "$skill_dir/SKILL.md" "$runtime_skill_dir/SKILL.md"');
     expect(fnBody).toContain('_link_or_copy "$skill_dir/sections" "$runtime_skill_dir/sections"');
   });
