@@ -929,7 +929,14 @@ create_opencode_runtime_root() {
 create_cursor_runtime_root() {
   local gstack_dir="$1"
   local cursor_gstack="$2"
+  local cursor_remote_tmp=""
 
+  # pair-agent stores its local credential in the runtime root. Preserve that
+  # user state while rebuilding managed runtime files during setup/upgrades.
+  if [ -f "$cursor_gstack/browse-remote.json" ]; then
+    cursor_remote_tmp="$(mktemp)"
+    cp -p "$cursor_gstack/browse-remote.json" "$cursor_remote_tmp"
+  fi
   if [ -L "$cursor_gstack" ]; then
     rm -f "$cursor_gstack"
   elif [ -d "$cursor_gstack" ] && [ "$cursor_gstack" != "$gstack_dir" ]; then
@@ -949,6 +956,41 @@ create_cursor_runtime_root() {
       _link_or_copy "$src" "$dst"
     fi
   done < <(cd "$gstack_dir" && bun run scripts/host-config-export.ts symlinks cursor)
+
+  # Shared resolver prose reads other skills from
+  # $GSTACK_ROOT/<source-skill-name>/SKILL.md. Mirror the generated Cursor
+  # variants into the runtime root so those reads get Cursor paths/tool names,
+  # while the discoverable namespaced copies remain under ~/.cursor/skills/.
+  local cursor_skills="$gstack_dir/.cursor/skills"
+  for skill_dir in "$cursor_skills"/gstack*/; do
+    [ -f "$skill_dir/SKILL.md" ] || continue
+    local generated_name
+    local runtime_name
+    local runtime_skill_dir
+    generated_name="$(basename "$skill_dir")"
+    case "$generated_name" in
+      gstack)
+        runtime_skill_dir="$cursor_gstack"
+        ;;
+      gstack-upgrade)
+        runtime_skill_dir="$cursor_gstack/gstack-upgrade"
+        ;;
+      *)
+        runtime_name="${generated_name#gstack-}"
+        runtime_skill_dir="$cursor_gstack/$runtime_name"
+        ;;
+    esac
+    mkdir -p "$runtime_skill_dir"
+    _link_or_copy "$skill_dir/SKILL.md" "$runtime_skill_dir/SKILL.md"
+    if [ -d "$skill_dir/sections" ]; then
+      _link_or_copy "$skill_dir/sections" "$runtime_skill_dir/sections"
+    fi
+  done
+
+  if [ -n "$cursor_remote_tmp" ]; then
+    cp -p "$cursor_remote_tmp" "$cursor_gstack/browse-remote.json"
+    rm -f "$cursor_remote_tmp"
+  fi
 }
 
 link_factory_skill_dirs() {
@@ -1037,7 +1079,7 @@ link_cursor_skill_dirs() {
       local target
       skill_name="$(basename "$skill_dir")"
       target="$skills_dir/$skill_name"
-      if [ -L "$target" ] || [ ! -e "$target" ]; then
+      if [ "$IS_WINDOWS" -eq 1 ] || [ -L "$target" ] || [ ! -e "$target" ]; then
         _link_or_copy "$skill_dir" "$target"
         linked+=("$skill_name")
       fi

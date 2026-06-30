@@ -2269,6 +2269,13 @@ describe('Cursor host generation', () => {
     expect(ship).toContain('Co-Authored-By: Cursor Agent <cursoragent@cursor.com>');
     expect(ship).not.toContain('Co-Authored-By: Claude');
   });
+
+  test('generates a Cursor-native upgrade workflow for the runtime mirror', () => {
+    const upgrade = fs.readFileSync(path.join(cursorSkills, 'gstack-upgrade', 'SKILL.md'), 'utf-8');
+    expect(upgrade).toContain('.cursor/gstack');
+    expect(upgrade).not.toContain('.claude/skills');
+    expect(upgrade).not.toContain('CLAUDE.md');
+  });
 });
 
 // ─── --host all tests ────────────────────────────────────────
@@ -2488,6 +2495,33 @@ describe('setup script validation', () => {
     expect(fnBody).toContain('host-config-export.ts symlinks cursor');
     expect(fnBody).toContain('mkdir -p "$(dirname "$dst")"');
     expect(fnBody).not.toContain('"$HOME/.cursor/skills/gstack"');
+  });
+
+  test('Cursor runtime mirrors generated skill docs for cross-skill reads', () => {
+    const fnStart = setupContent.indexOf('create_cursor_runtime_root()');
+    const fnEnd = setupContent.indexOf('link_factory_skill_dirs()', fnStart);
+    const fnBody = setupContent.slice(fnStart, fnEnd);
+    expect(fnBody).toContain('local cursor_skills="$gstack_dir/.cursor/skills"');
+    expect(fnBody).toContain('runtime_name="${generated_name#gstack-}"');
+    expect(fnBody).toContain('runtime_skill_dir="$cursor_gstack/gstack-upgrade"');
+    expect(fnBody).toContain('_link_or_copy "$skill_dir/SKILL.md" "$runtime_skill_dir/SKILL.md"');
+    expect(fnBody).toContain('_link_or_copy "$skill_dir/sections" "$runtime_skill_dir/sections"');
+  });
+
+  test('Cursor runtime rebuild preserves pair-agent credentials', () => {
+    const fnStart = setupContent.indexOf('create_cursor_runtime_root()');
+    const fnEnd = setupContent.indexOf('link_factory_skill_dirs()', fnStart);
+    const fnBody = setupContent.slice(fnStart, fnEnd);
+    expect(fnBody).toContain('$cursor_gstack/browse-remote.json');
+    expect(fnBody).toContain('cp -p "$cursor_gstack/browse-remote.json" "$cursor_remote_tmp"');
+    expect(fnBody).toContain('cp -p "$cursor_remote_tmp" "$cursor_gstack/browse-remote.json"');
+  });
+
+  test('Cursor skill links refresh copied directories on Windows', () => {
+    const fnStart = setupContent.indexOf('link_cursor_skill_dirs()');
+    const fnEnd = setupContent.indexOf('# 4. Install for Claude', fnStart);
+    const fnBody = setupContent.slice(fnStart, fnEnd);
+    expect(fnBody).toContain('[ "$IS_WINDOWS" -eq 1 ] || [ -L "$target" ] || [ ! -e "$target" ]');
   });
 
   test('create_agents_sidecar links runtime assets', () => {

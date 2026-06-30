@@ -483,6 +483,7 @@ describe('host config correctness', () => {
     expect(cursor.runtimeRoot.globalSymlinks).toContain('design/dist');
     expect(cursor.runtimeRoot.globalSymlinks).toContain('review/specialists');
     expect(cursor.runtimeRoot.globalSymlinks).toContain('qa/templates');
+    expect(cursor.runtimeRoot.globalSymlinks).not.toContain('gstack-upgrade');
   });
 
   test('cursor emits namespaced, spec-compliant skill metadata', () => {
