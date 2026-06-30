@@ -472,6 +472,34 @@ describe('host config correctness', () => {
     expect(factory.frontmatter.conditionalFields![0].add).toEqual({ 'disable-model-invocation': true });
   });
 
+  test('cursor uses the Agent CLI with the desktop command as an alias', () => {
+    expect(cursor.cliCommand).toBe('agent');
+    expect(cursor.cliAliases).toContain('cursor');
+  });
+
+  test('cursor keeps runtime assets outside its recursive skill root', () => {
+    expect(cursor.globalRoot).toBe('.cursor/gstack');
+    expect(cursor.localSkillRoot).toBe('.cursor/gstack');
+    expect(cursor.runtimeRoot.globalSymlinks).toContain('design/dist');
+    expect(cursor.runtimeRoot.globalSymlinks).toContain('review/specialists');
+    expect(cursor.runtimeRoot.globalSymlinks).toContain('qa/templates');
+  });
+
+  test('cursor emits namespaced, spec-compliant skill metadata', () => {
+    expect(cursor.generation.frontmatterNameMatchesDirectory).toBe(true);
+    expect(cursor.generation.namespaceSkillInvocations).toBe(true);
+    expect(cursor.frontmatter.conditionalFields).toContainEqual({
+      if: { sensitive: true },
+      add: { 'disable-model-invocation': true },
+    });
+  });
+
+  test('cursor rewrites shared instructions and Claude tool wording', () => {
+    expect(cursor.pathRewrites).toContainEqual({ from: 'CLAUDE.md', to: 'AGENTS.md' });
+    expect(cursor.toolRewrites!['use the Bash tool']).toContain('shell tool');
+    expect(cursor.coAuthorTrailer).toContain('Cursor Agent');
+  });
+
   test('codex has suppressedResolvers for self-invocation prevention', () => {
     expect(codex.suppressedResolvers).toBeDefined();
     expect(codex.suppressedResolvers).toContain('CODEX_SECOND_OPINION');

@@ -2224,6 +2224,53 @@ describe('Parameterized host smoke tests', () => {
   }
 });
 
+describe('Cursor host generation', () => {
+  const cursorSkills = path.join(ROOT, '.cursor', 'skills');
+
+  beforeAll(() => {
+    const result = Bun.spawnSync(
+      ['bun', 'run', 'scripts/gen-skill-docs.ts', '--host', 'cursor'],
+      { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' },
+    );
+    expect(result.exitCode).toBe(0);
+  });
+
+  test('frontmatter names match Cursor skill directories', () => {
+    for (const entry of fs.readdirSync(cursorSkills, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const skillMd = path.join(cursorSkills, entry.name, 'SKILL.md');
+      if (!fs.existsSync(skillMd)) continue;
+      const content = fs.readFileSync(skillMd, 'utf-8');
+      expect(content).toMatch(new RegExp(`^name:\\s*${entry.name}$`, 'm'));
+    }
+  });
+
+  test('namespaces cross-skill invocations and uses AGENTS.md', () => {
+    const ship = fs.readFileSync(path.join(cursorSkills, 'gstack-ship', 'SKILL.md'), 'utf-8');
+    expect(ship).toContain('/gstack-review');
+    expect(ship).not.toMatch(/(^|[\s`('"→])\/review(?=$|[\s`),.:;!?])/m);
+    expect(ship).toContain('AGENTS.md');
+    expect(ship).not.toContain('CLAUDE.md');
+  });
+
+  test('sensitive skills require explicit user invocation', () => {
+    const ship = fs.readFileSync(path.join(cursorSkills, 'gstack-ship', 'SKILL.md'), 'utf-8');
+    const careful = fs.readFileSync(path.join(cursorSkills, 'gstack-careful', 'SKILL.md'), 'utf-8');
+    const review = fs.readFileSync(path.join(cursorSkills, 'gstack-review', 'SKILL.md'), 'utf-8');
+    expect(ship).toMatch(/^disable-model-invocation:\s*true$/m);
+    expect(careful).toMatch(/^disable-model-invocation:\s*true$/m);
+    expect(review).not.toMatch(/^disable-model-invocation:/m);
+  });
+
+  test('uses the dedicated runtime root and Cursor attribution', () => {
+    const ship = fs.readFileSync(path.join(cursorSkills, 'gstack-ship', 'SKILL.md'), 'utf-8');
+    expect(ship).toContain('GSTACK_ROOT="$HOME/.cursor/gstack"');
+    expect(ship).toContain('$_ROOT/.cursor/gstack');
+    expect(ship).toContain('Co-Authored-By: Cursor Agent <cursoragent@cursor.com>');
+    expect(ship).not.toContain('Co-Authored-By: Claude');
+  });
+});
+
 // ─── --host all tests ────────────────────────────────────────
 
 describe('--host all', () => {
@@ -2372,16 +2419,18 @@ describe('setup script validation', () => {
     expect(claudeSection).toContain('link_claude_root_skill_alias "$SOURCE_GSTACK_DIR" "$INSTALL_SKILLS_DIR"');
   });
 
-  test('setup supports --host auto|claude|codex|kiro|opencode', () => {
+  test('setup supports --host auto|claude|codex|kiro|opencode|cursor', () => {
     expect(setupContent).toContain('--host');
-    expect(setupContent).toContain('claude|codex|kiro|factory|opencode|auto');
+    expect(setupContent).toContain('claude|codex|kiro|factory|opencode|cursor|auto');
   });
 
-  test('auto mode detects claude, codex, kiro, and opencode binaries', () => {
+  test('auto mode detects claude, codex, kiro, opencode, and Cursor binaries', () => {
     expect(setupContent).toContain('command -v claude');
     expect(setupContent).toContain('command -v codex');
     expect(setupContent).toContain('command -v kiro-cli');
     expect(setupContent).toContain('command -v opencode');
+    expect(setupContent).toContain('command -v agent');
+    expect(setupContent).toContain('command -v cursor');
   });
 
   // T1: Sidecar skip guard — prevents .agents/skills/gstack from being linked as a skill
@@ -2421,6 +2470,24 @@ describe('setup script validation', () => {
     expect(setupContent).toContain('qa/templates');
     expect(setupContent).toContain('qa/references');
     expect(setupContent).toContain('dx-hall-of-fame.md');
+  });
+
+  test('setup supports Cursor IDE, CLI, and Cloud Agent installs', () => {
+    expect(setupContent).toContain('INSTALL_CURSOR=');
+    expect(setupContent).toContain('CURSOR_SKILLS="$HOME/.cursor/skills"');
+    expect(setupContent).toContain('CURSOR_GSTACK="$HOME/.cursor/gstack"');
+    expect(setupContent).toContain('bun_cmd run gen:skill-docs --host cursor');
+    expect(setupContent).toContain('create_cursor_runtime_root "$SOURCE_GSTACK_DIR" "$CURSOR_GSTACK"');
+    expect(setupContent).toContain('link_cursor_skill_dirs "$SOURCE_GSTACK_DIR" "$CURSOR_SKILLS"');
+  });
+
+  test('Cursor runtime assets come from the declarative host manifest', () => {
+    const fnStart = setupContent.indexOf('create_cursor_runtime_root()');
+    const fnEnd = setupContent.indexOf('link_factory_skill_dirs()', fnStart);
+    const fnBody = setupContent.slice(fnStart, fnEnd);
+    expect(fnBody).toContain('host-config-export.ts symlinks cursor');
+    expect(fnBody).toContain('mkdir -p "$(dirname "$dst")"');
+    expect(fnBody).not.toContain('"$HOME/.cursor/skills/gstack"');
   });
 
   test('create_agents_sidecar links runtime assets', () => {
