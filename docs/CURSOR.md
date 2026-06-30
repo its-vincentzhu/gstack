@@ -61,6 +61,11 @@ environment's update command or save an environment snapshot after installing
 it. A reusable update command is:
 
 ```bash
+export PATH="$HOME/.npm-global/bin:$HOME/.bun/bin:$PATH"
+if ! command -v bun >/dev/null 2>&1; then
+  mkdir -p "$HOME/.npm-global"
+  npm install -g --prefix "$HOME/.npm-global" bun
+fi
 mkdir -p "$HOME/.gstack/repos"
 if [ -d "$HOME/.gstack/repos/gstack/.git" ]; then
   git -C "$HOME/.gstack/repos/gstack" pull --ff-only origin main

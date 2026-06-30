@@ -15,9 +15,10 @@ Source: `bun run gen:skill-docs --host cursor`, an isolated `./setup --host curs
 |---|---:|---:|---:|
 | Cursor surfaces served by one working install | 0 | 3 | +3 |
 | Skills installed by `./setup --host cursor` | 0 | 54 | +54 |
-| Runtime asset paths installed outside recursive skill discovery | 0 | 14 | +14 |
+| Generated workflows mirrored for internal skill reads | 0 | 54 | +54 |
+| Runtime support asset paths installed outside recursive skill discovery | 0 | 13 | +13 |
 | Sensitive workflows protected from automatic invocation | 0 | 6 | +6 |
-| Dedicated Cursor setup and generation regression tests | 0 | 10 | +10 |
+| Dedicated Cursor setup and generation regression tests | 0 | 14 | +14 |
 
 The important number is 54. Cursor users now get the full gstack workflow, not a host config that can generate files but cannot install or run them. The isolated setup completed successfully, and all 492 focused tests passed.
 
@@ -31,13 +32,15 @@ Install once, then use `/gstack-office-hours`, `/gstack-review`, `/gstack-qa`, a
 - First-class setup and uninstall lifecycle for Cursor IDE, the Cursor Agent CLI, and Cloud Agent environments.
 - Cursor-native generated skill names and namespaced cross-skill commands.
 - Explicit-only invocation metadata for shipping, deployment, and safety-state workflows.
-- Complete browser, design, review, and QA runtime assets under `~/.cursor/gstack/`.
+- Complete browser, design, review, and QA runtime assets plus Cursor-native internal skill mirrors under `~/.cursor/gstack/`.
 - A dedicated Cursor guide covering installation, Cloud environments, supported features, and hardware limits.
 
 #### Changed
 - Cursor detection follows the official `agent` CLI and accepts the desktop `cursor` command as an alias.
 - Generated Cursor skills use `AGENTS.md` and Cursor tool terminology.
 - Runtime files live outside `~/.cursor/skills/`, preventing Cursor's recursive scanner from surfacing duplicate skills.
+- Setup preserves local browser-pairing credentials, refreshes Windows skill copies, and leaves project-owned Cursor skills untouched during uninstall.
+- The Cloud Agent bootstrap installs Bun when the VM does not already provide it.
 
 #### For contributors
 - Added dedicated host config, generation, setup, and uninstall regression coverage, plus an isolated end-to-end install smoke.
