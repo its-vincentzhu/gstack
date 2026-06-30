@@ -20,8 +20,6 @@
 #   .gstack/                      — per-project browse state (in current git repo)
 #   .gstack-worktrees/            — per-project test worktrees (in current git repo)
 #   .agents/skills/gstack*        — Codex/Gemini/Cursor sidecar (in current git repo)
-#   .cursor/skills/gstack*        — Cursor project-local skills (in current git repo)
-#   .cursor/gstack                — Cursor project-local runtime (in current git repo)
 #   Running browse daemons        — stopped via SIGTERM before cleanup
 #
 # What is NOT REMOVED:
@@ -78,7 +76,6 @@ if [ "$FORCE" -eq 0 ]; then
     [ -d "$_GIT_ROOT/.gstack" ] && echo "  $_GIT_ROOT/.gstack/ (browse state + reports)"
     [ -d "$_GIT_ROOT/.gstack-worktrees" ] && echo "  $_GIT_ROOT/.gstack-worktrees/"
     [ -d "$_GIT_ROOT/.agents/skills" ] && echo "  $_GIT_ROOT/.agents/skills/gstack*"
-    { [ -d "$_GIT_ROOT/.cursor/skills" ] || [ -d "$_GIT_ROOT/.cursor/gstack" ]; } && echo "  $_GIT_ROOT/.cursor/skills/gstack* + $_GIT_ROOT/.cursor/gstack"
   fi
 
   # Preview running daemons
@@ -221,23 +218,6 @@ if [ -n "$_GIT_ROOT" ] && [ -d "$_GIT_ROOT/.agents/skills" ]; then
 
   rmdir "$_GIT_ROOT/.agents/skills" 2>/dev/null || true
   rmdir "$_GIT_ROOT/.agents" 2>/dev/null || true
-fi
-
-# ─── Remove per-project Cursor skills and runtime ─────────────
-if [ -n "$_GIT_ROOT" ] && [ -d "$_GIT_ROOT/.cursor" ]; then
-  if [ -d "$_GIT_ROOT/.cursor/skills" ]; then
-    for _ITEM in "$_GIT_ROOT/.cursor/skills"/gstack*; do
-      [ -e "$_ITEM" ] || [ -L "$_ITEM" ] || continue
-      rm -rf "$_ITEM"
-      REMOVED+=("cursor/$(basename "$_ITEM")")
-    done
-    rmdir "$_GIT_ROOT/.cursor/skills" 2>/dev/null || true
-  fi
-  if [ -d "$_GIT_ROOT/.cursor/gstack" ] || [ -L "$_GIT_ROOT/.cursor/gstack" ]; then
-    rm -rf "$_GIT_ROOT/.cursor/gstack"
-    REMOVED+=("$_GIT_ROOT/.cursor/gstack")
-  fi
-  rmdir "$_GIT_ROOT/.cursor" 2>/dev/null || true
 fi
 
 # ─── Remove per-project .factory/ sidecar ────────────────────

@@ -65,6 +65,8 @@ describe('gstack-uninstall', () => {
       // Create mock git repo
       fs.mkdirSync(mockGitRoot, { recursive: true });
       spawnSync('git', ['init', '-b', 'main'], { cwd: mockGitRoot, stdio: 'pipe' });
+      fs.mkdirSync(path.join(mockGitRoot, '.cursor', 'skills', 'gstack-custom'), { recursive: true });
+      fs.writeFileSync(path.join(mockGitRoot, '.cursor', 'skills', 'gstack-custom', 'SKILL.md'), 'project-owned');
     });
 
     afterEach(() => {
@@ -99,6 +101,7 @@ describe('gstack-uninstall', () => {
 
       // Non-gstack tool should still exist
       expect(fs.existsSync(path.join(mockHome, '.claude', 'skills', 'other-tool'))).toBe(true);
+      expect(fs.existsSync(path.join(mockGitRoot, '.cursor', 'skills', 'gstack-custom'))).toBe(true);
 
       // State should be removed
       expect(fs.existsSync(path.join(mockHome, '.gstack'))).toBe(false);
