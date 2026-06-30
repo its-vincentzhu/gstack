@@ -129,7 +129,7 @@ bun run skill:check      # health dashboard for all skills
 ## Key conventions
 
 - SKILL.md files are **generated** from `.tmpl` templates. Edit the template, not the output.
-- Run `bun run gen:skill-docs --host codex` to regenerate Codex-specific output.
+- Run `bun run gen:skill-docs --host codex` or `--host cursor` to regenerate host-specific output.
 - The browse binary provides headless browser access. Use `$B <command>` in skills.
 - Safety skills (careful, freeze, guard) use inline advisory prose — always confirm before destructive operations.
 - State paths resolve via `bin/gstack-paths` (sourced via `eval "$(...)"`). Honors `GSTACK_HOME`, `CLAUDE_PLUGIN_DATA`, `CLAUDE_PLANS_DIR`.
@@ -142,6 +142,11 @@ bun run skill:check      # health dashboard for all skills
 This repo requires **Bun** (not Node) for dev and tests. On Cursor Cloud VMs, Bun is installed to `~/.npm-global/bin` (via `npm install -g bun`) because `bun.sh` may be blocked by egress policy. Ensure `export PATH="$HOME/.npm-global/bin:$PATH"` is in your shell before running any `bun` command.
 
 One-time browser setup (not in the VM update script): after first `bun install`, run `bunx playwright install --with-deps chromium` so the browse daemon can launch headless Chromium.
+
+Run `./setup --host cursor` to exercise the end-user install path. It generates
+Cursor-native skills under the gitignored `.cursor/skills/` tree, installs them
+to `~/.cursor/skills/`, and keeps runtime assets outside recursive skill
+discovery at `~/.cursor/gstack/`.
 
 ### Core runnable app
 
