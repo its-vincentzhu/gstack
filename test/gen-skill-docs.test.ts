@@ -2579,7 +2579,11 @@ describe('setup script validation', () => {
     const fnStart = setupContent.indexOf('link_cursor_skill_dirs()');
     const fnEnd = setupContent.indexOf('# 4. Install for Claude', fnStart);
     const fnBody = setupContent.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('[ "$IS_WINDOWS" -eq 1 ] || [ -L "$target" ] || [ ! -e "$target" ]');
+    expect(fnBody).toContain('Cursor does not reliably discover a skill when the skill directory');
+    expect(fnBody).toContain('itself is a symlink');
+    expect(fnBody).toContain('mkdir -p "$target"');
+    expect(fnBody).toContain('_link_or_copy "$skill_dir/SKILL.md" "$target/SKILL.md"');
+    expect(fnBody).toContain('_link_or_copy "$skill_dir/sections" "$target/sections"');
   });
 
   test('create_agents_sidecar links runtime assets', () => {

@@ -1087,10 +1087,16 @@ link_cursor_skill_dirs() {
       local target
       skill_name="$(basename "$skill_dir")"
       target="$skills_dir/$skill_name"
-      if [ "$IS_WINDOWS" -eq 1 ] || [ -L "$target" ] || [ ! -e "$target" ]; then
-        _link_or_copy "$skill_dir" "$target"
-        linked+=("$skill_name")
+      # Cursor does not reliably discover a skill when the skill directory
+      # itself is a symlink. Keep a real directory at the discovery root and
+      # link/copy its contents instead.
+      if [ -L "$target" ] || [ -d "$target" ]; then rm -rf "$target"; fi
+      mkdir -p "$target"
+      _link_or_copy "$skill_dir/SKILL.md" "$target/SKILL.md"
+      if [ -d "$skill_dir/sections" ]; then
+        _link_or_copy "$skill_dir/sections" "$target/sections"
       fi
+      linked+=("$skill_name")
     fi
   done
   if [ ${#linked[@]} -gt 0 ]; then
