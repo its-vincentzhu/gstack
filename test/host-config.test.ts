@@ -427,6 +427,12 @@ describe('golden-file regression', () => {
 // ─── Individual host config correctness ─────────────────────
 
 describe('host config correctness', () => {
+  test('pair-agent fallback uses the Cursor runtime root', () => {
+    const cli = fs.readFileSync(path.join(ROOT, 'browse', 'src', 'cli.ts'), 'utf-8');
+    expect(cli).toContain("localHost === 'cursor'");
+    expect(cli).toContain("'.cursor/gstack'");
+  });
+
   test('claude is the only prefixable host', () => {
     for (const config of ALL_HOST_CONFIGS) {
       if (config.name === 'claude') {

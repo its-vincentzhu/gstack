@@ -2320,6 +2320,13 @@ describe('Cursor host generation', () => {
     expect(upgrade).not.toContain('CLAUDE.md');
     expect(upgrade).toContain('CURSOR_HOST=true');
     expect(upgrade).toContain('./setup --host cursor');
+    expect(upgrade).toContain('$HOME/gstack/.git');
+  });
+
+  test('rewrites ship plan verification to the Cursor runtime root', () => {
+    const ship = fs.readFileSync(path.join(cursorSkills, 'gstack-ship', 'SKILL.md'), 'utf-8');
+    expect(ship).toContain('cat $GSTACK_ROOT/qa-only/SKILL.md');
+    expect(ship).not.toContain('CLAUDE_SKILL_DIR');
   });
 });
 

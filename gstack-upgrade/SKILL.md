@@ -91,6 +91,10 @@ if [ -d "$HOME/.cursor/gstack" ] && [ -d "$HOME/.gstack/repos/gstack/.git" ]; th
   CURSOR_HOST=true
   INSTALL_TYPE="global-git"
   INSTALL_DIR="$HOME/.gstack/repos/gstack"
+elif [ -d "$HOME/.cursor/gstack" ] && [ -d "$HOME/gstack/.git" ]; then
+  CURSOR_HOST=true
+  INSTALL_TYPE="global-git"
+  INSTALL_DIR="$HOME/gstack"
 elif [ -d "$HOME/.claude/skills/gstack/.git" ]; then
   INSTALL_TYPE="global-git"
   INSTALL_DIR="$HOME/.claude/skills/gstack"
