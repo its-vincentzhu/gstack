@@ -2306,9 +2306,12 @@ describe('Cursor host generation', () => {
 
   test('uses environment paths for global Cursor browser, design, and PDF binaries', () => {
     const browse = fs.readFileSync(path.join(cursorSkills, 'gstack-browse', 'SKILL.md'), 'utf-8');
+    const qa = fs.readFileSync(path.join(cursorSkills, 'gstack-qa', 'SKILL.md'), 'utf-8');
     const design = fs.readFileSync(path.join(cursorSkills, 'gstack-design-shotgun', 'SKILL.md'), 'utf-8');
     const pdf = fs.readFileSync(path.join(cursorSkills, 'gstack-make-pdf', 'SKILL.md'), 'utf-8');
     expect(browse).toContain('B="$GSTACK_BROWSE/browse"');
+    expect(qa).toContain('B="$_ROOT/.cursor/gstack/browse/dist/browse"');
+    expect(qa).not.toContain('$_ROOT/$GSTACK_ROOT');
     expect(design).toContain('D="$GSTACK_DESIGN/design"');
     expect(pdf).toContain('P="$GSTACK_MAKE_PDF/pdf"');
   });

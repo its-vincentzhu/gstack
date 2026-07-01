@@ -36,7 +36,6 @@ const cursor: HostConfig = {
     { from: '.claude/skills/gstack', to: '$GSTACK_ROOT' },
     { from: '.claude/skills/review', to: '$GSTACK_ROOT/review' },
     { from: '.claude/skills', to: '.cursor/skills' },
-    { from: '.cursor/gstack/', to: '$GSTACK_ROOT/' },
     { from: '${CLAUDE_SKILL_DIR}/../', to: '$GSTACK_ROOT/' },
     { from: 'qa/templates/', to: '$GSTACK_ROOT/qa/templates/' },
     { from: 'qa/references/', to: '$GSTACK_ROOT/qa/references/' },
